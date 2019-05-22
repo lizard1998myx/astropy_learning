@@ -1,10 +1,23 @@
-#making columns with astropy V1.0
+#making columns with astropy V1.1
 #Yuxi Meng 2019-05-22
+
+
+#An example
+#
+#for parameter in range(5):
+#    file_in = "image_" + parameter + "_in.xml"
+#    file_out = "image_" + parameter + "_out.xml"
+#    ra_cen = 12.2574702070
+#    dec_cen = -19.9815841286
+#    mkcol(file_in, file_out, ra_cen, dec_cen)
+
 
 #make SNR, area, sep columns from an input votable
 #save the output to a new file
+#
 #separation is the angular separation of the source and the center
 #coordinates of the center should be in degrees and fk5 system
+#
 def mkcol( file_in, file_out, ra_cen, dec_cen ):
     #inport the vot file
     from astropy.io.votable import parse_single_table
@@ -13,10 +26,9 @@ def mkcol( file_in, file_out, ra_cen, dec_cen ):
     print("reading the file: " + str(file_in))
     print("please wait")
 
-    #new column of SNR and area
+    #new column of SNR and area (in the unit of beam)
     t['SNR'] = t['peak_flux']/t['local_rms']
     t['area'] = t['int_flux']/t['peak_flux']
-    t['area'].unit = 'beam'
 
     #calculating separation
     import numpy as np
@@ -24,10 +36,9 @@ def mkcol( file_in, file_out, ra_cen, dec_cen ):
     from astropy.coordinates import Angle
     from astropy.coordinates import SkyCoord
 
-    #setting the coordinate of the center (in degree, fk5)
     c0 = SkyCoord(Angle(ra_cen * u.deg), Angle(dec_cen * u.deg), frame='fk5')
-
     seplist = []
+
     for i in range(len(t)):
         c = SkyCoord(Angle(t['ra'][i] * u.deg), Angle(t['dec'][i] * u.deg), frame='fk5')
         sep = c.separation(c0)
@@ -45,11 +56,3 @@ def mkcol( file_in, file_out, ra_cen, dec_cen ):
     return;
 
 
-#An example
-#
-#for parameter in range(5):
-#    file_in = "image_" + parameter + "_in.xml"
-#    file_out = "image_" + parameter + "_out.xml"
-#    ra_cen = 12.2574702070
-#    dec_cen = -19.9815841286
-#    mkcol(file_in, file_out, ra_cen, dec_cen)
