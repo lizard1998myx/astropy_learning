@@ -1,40 +1,77 @@
-#Getting stat from votable file V1.0
-#Yuxi Meng 2019-05-22
+#Getting statistics from table file V2.1
+#Yuxi Meng 2019-05-23
 
-#import filename and a list of column names
-#return a string with mean, std and median value
-def stat( file_name, col_names ):
-    #import the vot file
+
+#create a empty table 't' with columns needed
+from astropy.table import Table
+t = Table(names=('filename', 'source_count', 
+                 'SNR_mean', 'SNR_std', 'SNR_med',
+                 'peak_flux_mean', 'peak_flux_std', 'peak_flux_med',
+                 'local_rms_mean', 'local_rms_std', 'local_rms_med',
+                 'psf_a', 'psf_b'),
+          meta={'name': 'first table'},
+          dtype=('U25', 'i4', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8',
+                 'f8', 'f8', 'f8', 'f8', 'f8'))
+
+#getting information from each votable file to the output table
+for j in ["all", "sub"]:
+    for i in [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]:
+        file_in = "image_" + str(i) + "_" + str(j) + ".vot"
+        t.add_row(stat(str(file_in), 
+                       ['SNR', 'peak_flux', 'local_rms'],
+                       ['psf_a', 'psf_b']))
+
+#saving file (in csv or fits)
+t.write("output.csv")
+#t.write("output.fits")
+
+
+#  import filename and two list of column names
+#
+#  return a list with the following quantities:
+#  filename (string) and source count
+#  mean, std, median value of columns from 'stat_col_names'
+#  median value of columns from 'single_col_names'
+#
+def stat( file_name, stat_col_names, single_col_names ):
+
     from astropy.io.votable import parse_single_table
     from astropy.table import Table
-    t = parse_single_table(str(file_name)).to_table()
-    print("reading the file: " + str(file_name))
-
-    #calculate the statistics
     import numpy as np
 
-    info = ("\n======\n"
-           + "Filename: " + str(file_name) + '\n'
-           + "quantity of data: " + str(len(t))
-           + '\n\n')
+    #import the vot file
+    t = parse_single_table(str(file_name)).to_table()
+    print()
+    print("+ reading the file: " + str(file_name))
 
-    for col_name in col_names:
-        info = (info + "-- " + str(col_name) + " --\n"
-               + "mean = " + str(np.mean(t[str(col_name)])) + '\n'
-               + "std  = " + str(np.std(t[str(col_name)])) + '\n'
-               +"med  = " + str(np.median(t[str(col_name)])) +'\n'
-               + '\n')
+    #calculate the statistics, put them into list 'info'
+    #you can use np.round(i, j) to simplify the data
+
+    #get file name and source count (number of rows)
+    print("- filename and source count")
+    info = [file_name, len(t)]
+
+    #get mean, standard dev, and median of some columns
+    for col_name in stat_col_names:
+        print("- mean, std and median of " + str(col_name))
+        info.append(np.nanmean(t[str(col_name)]))
+        info.append(np.nanstd(t[str(col_name)]))
+        info.append(np.nanmedian(t[str(col_name)]))
+
+    #get median of some columns
+    for col_name in single_col_names:
+        print("- median of " + str(col_name))
+        info.append(np.median(t[str(col_name)]))
+
     print(info)
+    print()
 
     return info
 
-#getting the string to put in the stat file
-info = ""
-for i in range(5):
-    file_in = "image_" + str(i) + "_out.vot"
-    info = info + stat(str(file_in), ['SNR', 'peak_flux', 'local_rms'])
 
-#put the string in the file
-fo = open("log_minUV40_briggs", "w")
-fo.write(info)
-fo.close
+#  extra: saving numpy table in the format of votable
+def savevot( table, output_name )
+    from astropy.io.votable import from_table, writeto
+    writeto(from_table(table), str(output_name))
+    print(str(output_name) + "saved in votable successfully!")
+    return
