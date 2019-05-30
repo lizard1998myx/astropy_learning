@@ -1,19 +1,22 @@
-#Combine two images with inverse-variance weighting V1.0
-#Yuxi Meng 2019-05-29
+#Combine two images with inverse-variance weighting V2.1
+#Yuxi Meng 2019-05-30
 #
-# Terrible version & very very slow
-# but it works
 
+from astropy.io import fits
+
+test_combine()
+
+#test the combine function
 def test_combine():
     imagelist = ["ppr2_briggs_-0.5-t0500-XX-image.fits",
                  "ppr2_briggs_-0.5-t0500-YY-image.fits"]
-	#however, this is not primary beam
-    beamlist = ["ppr2_briggs_-0.5-t0500-XX-model.fits",
-                "ppr2_briggs_-0.5-t0500-YY-model.fits"]
-    output = "ppr2_briggs_-0.5-t0500-image_astropy_combination.fits"
+    beamlist = ["ppr2_briggs_0.5-XX-dirty_beamXX.fits",
+                "ppr2_briggs_0.5-XX-dirty_beamYY.fits"]
+    output = "ppr2_briggs_-0.5-t0500-image_astropy_combination_V2.14.fits"
     combine(imagelist, beamlist, output)
 
-
+#calculate the inverse-variance weighting
+#aggregate radom variables to minimize the variance of the weighted average
 def inv_var_weighting ( ylist, sigmalist ):
     
 	if len(ylist) != len(sigmalist):
@@ -30,10 +33,10 @@ def inv_var_weighting ( ylist, sigmalist ):
 	return numerator/denominator
 
 
-
+#combine two images
 def combine ( imagelist, beamlist, output ):
 
-	from astropy.io import fits
+#	from astropy.io import fits
 
 	if len(imagelist) != len(beamlist):
 		print("Unequal list length.")
@@ -42,35 +45,28 @@ def combine ( imagelist, beamlist, output ):
 	#open the first image as a basic
 	hdul = fits.open(str(imagelist[0]))
 	data = hdul[0].data
-	[a, b, xsize, ysize] = data.shape
 
-	imagedata = []
-	beamdata = []
+	ylist = []		#store a list of variables
+	sigmalist = []	#store a list of variance
 
-	#read the data
 	for i in range(len(imagelist)):
-		imagedata.append((fits.open(str(imagelist[i])))[0].data)
-		beamdata.append((fits.open(str(beamlist[i])))[0].data)
 
-	#check if the data table equals
+		# read the data tables
+		with fits.open(str(imagelist[i])) as imagehdul:
+			imagedata = imagehdul[0].data
+		with fits.open(str(beamlist[i])) as beamhdul:
+			beamdata = beamhdul[0].data
+		
+		# make ylist and sigmalist
+		# y = Image/Beam, sigma = 1/Beam
+		ylist.append(imagedata/beamdata)
+		sigmalist.append(1/beamdata)
 
-	#make ylist and sigmalist by reading data
-	for x in range(xsize):
-		for y in range(ysize):
-			ylist = []
-			sigmalist = []
-			for i in range(len(imagelist)):
-				ylist.append(imagedata[i][0,0,x,y]/beamdata[i][0,0,x,y])
-				sigmalist.append(1/beamdata[i][0,0,x,y])
-			data[0,0,x,y] = inv_var_weighting(ylist, sigmalist)
-			print(str(x) + ", " + str(y))
+	#calculate
+	hdul[0].data = inv_var_weighting(ylist, sigmalist)
 
-	hdul[0].data = data
+	#save the changes
 	hdul.writeto(str(output))
-
 	hdul.close()
 
 	return
-
-
-test_combine()
