@@ -1,10 +1,8 @@
-#Combine two images with inverse-variance weighting V2.1
+#Combine two images with inverse-variance weighting V2.2
 #Yuxi Meng 2019-05-30
 #
 
 from astropy.io import fits
-
-test_combine()
 
 #test the combine function
 def test_combine():
@@ -12,7 +10,7 @@ def test_combine():
                  "ppr2_briggs_-0.5-t0500-YY-image.fits"]
     beamlist = ["ppr2_briggs_0.5-XX-dirty_beamXX.fits",
                 "ppr2_briggs_0.5-XX-dirty_beamYY.fits"]
-    output = "ppr2_briggs_-0.5-t0500-image_astropy_combination_V2.14.fits"
+    output = "ppr2_briggs_-0.5-t0500-image_astropy_combination_V2.2.fits"
     combine(imagelist, beamlist, output)
 
 #calculate the inverse-variance weighting
@@ -58,7 +56,8 @@ def combine ( imagelist, beamlist, output ):
 			beamdata = beamhdul[0].data
 		
 		# make ylist and sigmalist
-		# y = Image/Beam, sigma = 1/Beam
+		# y = Image instead of Image/Beam
+		# sigma = 1/Beam
 		ylist.append(imagedata/beamdata)
 		sigmalist.append(1/beamdata)
 
@@ -70,3 +69,7 @@ def combine ( imagelist, beamlist, output ):
 	hdul.close()
 
 	return
+
+
+
+test_combine()
