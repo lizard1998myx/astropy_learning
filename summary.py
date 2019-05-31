@@ -1,4 +1,4 @@
-#Getting statistics from table file V2.2
+#Getting statistics from table file V2.3
 #Yuxi Meng 2019-05-31
 #
 # armory version
@@ -8,7 +8,7 @@ from astropy.table import Table
 import numpy as np
 
 #an example of making a csv table
-def example_stat():
+def example_summary():
 
 	#create a empty table 't' with columns needed
 	t = Table(names=('filename', 'source_count', 
@@ -22,11 +22,11 @@ def example_stat():
 
 	#getting information from each votable file to the output table
 	for j in ["all", "sub"]:
-	    for i in [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]:
-		file_in = "image_" + str(i) + "_" + str(j) + ".vot"
-		t.add_row(stat(str(file_in), 
-		               ['SNR', 'peak_flux', 'local_rms'],
-		               ['psf_a', 'psf_b']))
+		for i in [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]:
+			file_in = "image_" + str(i) + "_" + str(j) + ".vot"
+			t.add_row(summary(str(file_in), 
+				['SNR', 'peak_flux', 'local_rms'],
+				['psf_a', 'psf_b']))
 
 	#saving file (in csv)
 	t.write("output.csv")
@@ -41,7 +41,7 @@ def example_stat():
 #  mean, std, median value of columns from 'stat_col_names'
 #  median value of columns from 'single_col_names'
 #
-def stat( file_name, stat_col_names, single_col_names ):
+def summary( file_name, stat_col_names, single_col_names ):
 
 	#import the vot file
 	t = parse_single_table(str(file_name)).to_table()
