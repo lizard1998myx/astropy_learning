@@ -1,0 +1,34 @@
+asca
+read events ad15032000g200170h.unf
+.
+yes
+select mkf
+SAA==0 && ACS==0 && COR > 6 && ELV > 5 && ANG_DIST > 0.0 && ANG_DIST < 0.01 && G2_L1 > 0.0
+../aux/
+gisclean
+extract "events image"
+save events
+ad15032000g200170h_g2.evt
+yes
+yes
+filter region ad15032000g200170h.reg
+show filter
+extract spectrum
+save spectrum 
+yuxi_beta_ad15032000g200170h_g2.pi
+yes
+yes
+extract curve
+save curve
+yuxi_beta_ad15032000g200170h_g2.lc
+yes
+clear region all
+filter region ad15032000g200170h_bgd.reg
+show filter
+extract spectrum
+save spectrum 
+yuxi_beta_ad15032000g200170h_g2_bgd.pi
+no
+yes
+exit
+no
